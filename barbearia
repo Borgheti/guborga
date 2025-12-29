@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barbearia Estilo Fino</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#111;color:#fff}
+
+header{
+background:#000;
+padding:20px;
+text-align:center;
+border-bottom:2px solid #c59d5f
+}
+
+header h1{color:#c59d5f}
+
+nav a{
+color:#fff;
+margin:0 15px;
+text-decoration:none;
+font-weight:bold
+}
+nav a:hover{color:#c59d5f}
+
+.hero{
+height:70vh;
+background:linear-gradient(rgba(0,0,0,.7),rgba(0,0,0,.7)),
+url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1');
+background-size:cover;
+display:flex;
+align-items:center;
+justify-content:center
+}
+.hero h2{color:#c59d5f;font-size:3rem}
+
+section{padding:60px 20px;text-align:center}
+h3{color:#c59d5f;margin-bottom:30px}
+
+.services{
+display:flex;
+gap:20px;
+justify-content:center;
+flex-wrap:wrap
+}
+
+.service{
+background:#1c1c1c;
+padding:20px;
+border-radius:10px;
+width:250px
+}
+
+.price{color:#c59d5f;font-weight:bold;margin-top:8px}
+
+.schedule,.login{
+max-width:400px;
+margin:auto;
+display:flex;
+flex-direction:column;
+gap:12px
+}
+
+input,select,button{
+padding:12px;
+border-radius:5px;
+border:none;
+font-size:1rem
+}
+
+button{
+background:#c59d5f;
+font-weight:bold;
+cursor:pointer
+}
+
+.horarios{
+display:flex;
+gap:10px;
+justify-content:center;
+flex-wrap:wrap;
+margin-bottom:15px
+}
+
+.hora{padding:10px;border-radius:5px}
+.disponivel{background:#2e7d32}
+.indisponivel{background:#8b0000}
+
+.status{
+margin-top:15px;
+padding:12px;
+border-radius:5px;
+font-weight:bold
+}
+.pendente{background:#b8860b}
+.confirmado{background:#2e7d32}
+.recusado{background:#8b0000}
+
+footer{
+background:#000;
+padding:15px;
+text-align:center;
+margin-top:40px
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Barbearia Estilo Fino</h1>
+<nav>
+<a href="#agendamento">Agendar</a>
+<a href="#login">Meu Horário</a>
+</nav>
+</header>
+
+<div class="hero">
+<h2>Seu estilo começa aqui</h2>
+</div>
+
+<section>
+<h3>Serviços</h3>
+<div class="services">
+<div class="service">Corte Masculino<div class="price">R$ 30</div></div>
+<div class="service">Barba<div class="price">R$ 20</div></div>
+<div class="service">Corte + Barba<div class="price">R$ 45</div></div>
+</div>
+</section>
+
+<section id="agendamento">
+<h3>Agende seu Horário</h3>
+
+<div id="horarios" class="horarios"></div>
+
+<form class="schedule" onsubmit="salvarAgendamento(event)">
+<input id="nome" placeholder="Seu nome" required>
+<input id="telefone" placeholder="Telefone" required>
+<input type="date" id="data" required onchange="carregarHorarios()">
+<select id="hora" required></select>
+<select id="servico" required>
+<option value="">Serviço</option>
+<option>Corte</option>
+<option>Barba</option>
+<option>Corte + Barba</option>
+</select>
+<button>Enviar Pedido</button>
+</form>
+</section>
+
+<section id="login">
+<h3>Consultar Agendamento</h3>
+
+<form class="login" onsubmit="loginCliente(event)">
+<input id="loginNome" placeholder="Seu nome" required>
+<input id="loginTelefone" placeholder="Telefone" required>
+<button>Consultar</button>
+</form>
+
+<div id="resultado"></div>
+</section>
+
+<footer>© 2025 Barbearia Estilo Fino</footer>
+
+<script>
+const horariosPadrao=['09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00','18:00'];
+
+function carregarHorarios(){
+const data=document.getElementById('data').value;
+const div=document.getElementById('horarios');
+const select=document.getElementById('hora');
+
+div.innerHTML='';
+select.innerHTML='<option value="">Horário</option>';
+
+let ag=JSON.parse(localStorage.getItem('agendamentos'))||[];
+let ocupados=ag.filter(a=>a.data===data&&a.status==='confirmado').map(a=>a.hora);
+
+horariosPadrao.forEach(h=>{
+const s=document.createElement('span');
+s.className='hora '+(ocupados.includes(h)?'indisponivel':'disponivel');
+s.textContent=h;
+
+if(!ocupados.includes(h)){
+const o=document.createElement('option');
+o.value=h;
+o.textContent=h;
+select.appendChild(o);
+}
+div.appendChild(s);
+});
+}
+
+function salvarAgendamento(e){
+e.preventDefault();
+
+let ag=JSON.parse(localStorage.getItem('agendamentos'))||[];
+ag.push({
+nome:nome.value,
+telefone:telefone.value,
+data:data.value,
+hora:hora.value,
+servico:servico.value,
+status:'pendente'
+});
+
+localStorage.setItem('agendamentos',JSON.stringify(ag));
+alert('Pedido enviado! Acompanhe em "Meu Horário".');
+e.target.reset();
+}
+
+function loginCliente(e){
+e.preventDefault();
+
+let ag=JSON.parse(localStorage.getItem('agendamentos'))||[];
+let a=ag.find(x=>x.nome===loginNome.value&&x.telefone===loginTelefone.value);
+
+resultado.innerHTML = a
+? `<div class="status ${a.status}">${a.status.toUpperCase()}<br>${a.data} às ${a.hora}<br>${a.servico}</div>`
+: '<p>Agendamento não encontrado.</p>';
+}
+</script>
+
+</body>
+</html>
